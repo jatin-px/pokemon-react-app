@@ -6,8 +6,10 @@ const PokemonGrid = ({ pokemon }) => {
       {pokemon.map((poke, i) => (
         <div
           key={poke.id}
-          className="animate-fade-in-up"
-          style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
+          style={{
+            animation: "fadeSlideUp 0.4s ease both",
+            animationDelay: `${i * 55}ms`,
+          }}
         >
           <PokemonCard pokemon={poke} />
         </div>

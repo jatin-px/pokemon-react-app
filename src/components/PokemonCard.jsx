@@ -10,9 +10,9 @@ const PokemonCard = ({ pokemon }) => {
 
   return (
     <div
-      className={`relative rounded-3xl overflow-hidden shadow-2xl
+      className="relative rounded-3xl overflow-hidden shadow-2xl
         transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1
-        cursor-pointer group`}
+        cursor-pointer group"
       style={{ background: "linear-gradient(145deg, #1a1f35, #111827)" }}
     >
       {/* Gradient accent top strip */}
@@ -30,25 +30,31 @@ const PokemonCard = ({ pokemon }) => {
 
       <div className="p-5">
         {/* Header row */}
-        <div className="flex justify-between items-start mb-1">
-          <div>
-            <p className="text-xs font-bold tracking-[0.2em] uppercase mb-0.5" style={{ color: solid, fontFamily: "'DM Mono', monospace" }}>
+        <div className="flex justify-between items-start mb-1 gap-2">
+          <div className="min-w-0">
+            <p
+              className="text-xs font-bold tracking-[0.2em] uppercase mb-0.5"
+              style={{ color: solid, fontFamily: "'DM Mono', monospace" }}
+            >
               #{String(pokemon.id).padStart(3, "0")}
             </p>
             <h2
               className="text-2xl font-black capitalize text-white leading-tight"
-              style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.01em" }}
+              style={{
+                fontFamily: "'Syne', sans-serif",
+                letterSpacing: "-0.01em",
+              }}
             >
               {pokemon.name}
             </h2>
           </div>
 
           {/* Type badges */}
-          <div className="flex flex-col gap-1.5 items-end">
+          <div className="flex flex-col gap-1.5 items-end shrink-0">
             {pokemon.types.map((typeObj) => (
               <span
                 key={typeObj.type.name}
-                className="px-3 py-0.5 rounded-full text-xs font-bold capitalize text-white tracking-wide"
+                className="px-3 py-0.5 rounded-full text-xs font-bold capitalize text-white"
                 style={{
                   background: typeSolid[typeObj.type.name] || "#718096",
                   fontFamily: "'DM Mono', monospace",
@@ -61,21 +67,24 @@ const PokemonCard = ({ pokemon }) => {
           </div>
         </div>
 
-        {/* Pokemon image */}
+        {/* Pokémon image */}
         <div
           className="relative flex justify-center items-center my-3 rounded-2xl py-2"
           style={{ background: "rgba(255,255,255,0.03)" }}
         >
-          {/* Subtle radial glow behind the sprite */}
           <div
             className="absolute w-36 h-36 rounded-full blur-2xl opacity-30 pointer-events-none"
             style={{ background: solid }}
           />
           <img
-            src={pokemon.sprites.other["official-artwork"].front_default}
+            src={
+              pokemon.sprites.other["official-artwork"].front_default ||
+              pokemon.sprites.front_default
+            }
             alt={pokemon.name}
-            className="relative w-44 h-44 object-contain drop-shadow-2xl
+            className="pokemon-img relative w-44 h-44 object-contain drop-shadow-2xl
               group-hover:scale-110 transition-transform duration-500"
+            loading="lazy"
           />
         </div>
 
@@ -84,26 +93,49 @@ const PokemonCard = ({ pokemon }) => {
           className="flex justify-around text-center py-3 mb-4 rounded-2xl"
           style={{ background: "rgba(255,255,255,0.04)" }}
         >
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-widest mb-0.5" style={{ fontFamily: "'DM Mono', monospace" }}>Height</p>
-            <p className="text-white font-bold text-sm">{(pokemon.height / 10).toFixed(1)}m</p>
+          <div className="min-w-0 flex-1 px-1">
+            <p
+              className="text-xs text-gray-500 uppercase tracking-widest mb-0.5"
+              style={{ fontFamily: "'DM Mono', monospace" }}
+            >
+              Height
+            </p>
+            <p className="text-white font-bold text-sm">
+              {(pokemon.height / 10).toFixed(1)}m
+            </p>
           </div>
-          <div className="w-px bg-white/10" />
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-widest mb-0.5" style={{ fontFamily: "'DM Mono', monospace" }}>Weight</p>
-            <p className="text-white font-bold text-sm">{(pokemon.weight / 10).toFixed(1)}kg</p>
+          <div className="w-px bg-white/10 self-stretch" />
+          <div className="min-w-0 flex-1 px-1">
+            <p
+              className="text-xs text-gray-500 uppercase tracking-widest mb-0.5"
+              style={{ fontFamily: "'DM Mono', monospace" }}
+            >
+              Weight
+            </p>
+            <p className="text-white font-bold text-sm">
+              {(pokemon.weight / 10).toFixed(1)}kg
+            </p>
           </div>
-          <div className="w-px bg-white/10" />
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-widest mb-0.5" style={{ fontFamily: "'DM Mono', monospace" }}>Abilities</p>
-            <p className="text-white font-bold text-sm capitalize">{pokemon.abilities[0].ability.name}</p>
+          <div className="w-px bg-white/10 self-stretch" />
+          <div className="min-w-0 flex-1 px-1">
+            <p
+              className="text-xs text-gray-500 uppercase tracking-widest mb-0.5"
+              style={{ fontFamily: "'DM Mono', monospace" }}
+            >
+              Abilities
+            </p>
+            <p className="text-white font-bold text-sm capitalize truncate">
+              {pokemon.abilities[0].ability.name}
+            </p>
           </div>
         </div>
 
         {/* Stat bars */}
         <div className="space-y-2">
           {keyStats.map((statObj) => {
-            const name = statObj.stat.name.replace("special-", "sp.");
+            const name = statObj.stat.name
+              .replace("special-attack", "sp.atk")
+              .replace("special-defense", "sp.def");
             const val = statObj.base_stat;
             const max = statMax[statObj.stat.name] || 255;
             const pct = Math.round((val / max) * 100);
@@ -118,11 +150,14 @@ const PokemonCard = ({ pokemon }) => {
                 <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${solid}99, ${solid})` }}
+                    style={{
+                      width: `${pct}%`,
+                      background: `linear-gradient(90deg, ${solid}99, ${solid})`,
+                    }}
                   />
                 </div>
                 <span
-                  className="w-8 text-xs font-bold text-gray-400 shrink-0"
+                  className="w-8 text-xs font-bold text-gray-400 shrink-0 text-right"
                   style={{ fontFamily: "'DM Mono', monospace" }}
                 >
                   {val}
