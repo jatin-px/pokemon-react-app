@@ -18,8 +18,16 @@ const PokemonDetails = () => {
   const mainType = pokemon.types[0].type.name;
   const solid = typeSolid[mainType] || "#718096";
 
-  // Maximum values for all 6 stats to calculate the progress bar widths
   const statMax = { hp: 255, attack: 190, defense: 230, "special-attack": 194, "special-defense": 230, speed: 200 };
+
+  // ── Function to play the audio cry ──
+  const playCry = () => {
+    if (pokemon.cries && pokemon.cries.latest) {
+      const audio = new Audio(pokemon.cries.latest);
+      audio.volume = 0.5;
+      audio.play();
+    }
+  };
 
   return (
     <div className="page-content max-w-4xl mx-auto min-h-screen pb-20">
@@ -39,7 +47,6 @@ const PokemonDetails = () => {
           #{String(pokemon.id).padStart(3, "0")}
         </p>
         
-        {/* Adjusted clamp to 2rem to ensure it fits mobile screens without needing word-break */}
         <h1 
           className="font-black capitalize text-white mb-6" 
           style={{ 
@@ -51,19 +58,41 @@ const PokemonDetails = () => {
           {pokemon.name.replace("-", " ")}
         </h1>
         
-        <div className="flex flex-wrap justify-center gap-3 px-2">
-          {pokemon.types.map((typeObj) => (
-            <span
-              key={typeObj.type.name}
-              className="px-5 py-1.5 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-bold capitalize text-white shadow-lg"
-              style={{ background: typeSolid[typeObj.type.name] || "#718096", fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em" }}
-            >
-              {typeObj.type.name}
-            </span>
-          ))}
+        <div className="flex flex-col items-center gap-5">
+          {/* Type Badges */}
+          <div className="flex flex-wrap justify-center gap-3 px-2">
+            {pokemon.types.map((typeObj) => (
+              <span
+                key={typeObj.type.name}
+                className="px-5 py-1.5 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-bold capitalize text-white shadow-lg"
+                style={{ background: typeSolid[typeObj.type.name] || "#718096", fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em" }}
+              >
+                {typeObj.type.name}
+              </span>
+            ))}
+          </div>
+
+          {/* ── NEW: Play Cry Audio Button ── */}
+          <button 
+            onClick={playCry}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold text-white shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+            style={{ 
+              background: `linear-gradient(135deg, ${solid}88, ${solid})`,
+              fontFamily: "'DM Mono', monospace", 
+              letterSpacing: "0.05em",
+              border: `1px solid ${solid}44`
+            }}
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM18.584 5.106a.75.75 0 011.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 11-1.06-1.06 8.25 8.25 0 000-11.668.75.75 0 010-1.06z"/>
+              <path d="M15.932 7.757a.75.75 0 011.061 0 6 6 0 010 8.486.75.75 0 01-1.06-1.061 4.5 4.5 0 000-6.364.75.75 0 010-1.06z"/>
+            </svg>
+            Play Cry
+          </button>
         </div>
       </div>
 
+      {/* Large Image View */}
       <div className="relative flex justify-center items-center py-8 md:py-10 mb-12 rounded-3xl mx-2 sm:mx-0" style={{ background: "rgba(255,255,255,0.03)" }}>
         <div className="absolute w-52 h-52 sm:w-64 sm:h-64 md:w-96 md:h-96 rounded-full blur-3xl opacity-30 pointer-events-none" style={{ background: solid }} />
         <img
@@ -73,10 +102,9 @@ const PokemonDetails = () => {
         />
       </div>
 
-      {/* ── NEW: Detailed Info Section ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
         
-        {/* Left Column: Physical & Abilities */}
+        {/* Left Column: Physical, Experience & Abilities */}
         <div className="flex flex-col gap-6">
           <h3 className="text-xl font-bold border-b border-white/10 pb-2" style={{ fontFamily: "'Syne', sans-serif" }}>
             Training Info
@@ -91,6 +119,19 @@ const PokemonDetails = () => {
             <div className="flex-1 px-2">
               <p className="text-xs text-gray-500 uppercase tracking-widest mb-1" style={{ fontFamily: "'DM Mono', monospace" }}>Weight</p>
               <p className="text-white font-bold text-lg">{(pokemon.weight / 10).toFixed(1)}kg</p>
+            </div>
+          </div>
+
+          {/* ── NEW: Base Exp and Moves Info ── */}
+          <div className="flex justify-around text-center py-5 rounded-2xl" style={{ background: "rgba(255,255,255,0.04)" }}>
+            <div className="flex-1 px-2">
+              <p className="text-xs text-gray-500 uppercase tracking-widest mb-1" style={{ fontFamily: "'DM Mono', monospace" }}>Base Exp</p>
+              <p className="text-white font-bold text-lg">{pokemon.base_experience || "N/A"}</p>
+            </div>
+            <div className="w-px bg-white/10 self-stretch" />
+            <div className="flex-1 px-2">
+              <p className="text-xs text-gray-500 uppercase tracking-widest mb-1" style={{ fontFamily: "'DM Mono', monospace" }}>Total Moves</p>
+              <p className="text-white font-bold text-lg">{pokemon.moves.length}</p>
             </div>
           </div>
 
