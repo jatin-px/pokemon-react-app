@@ -156,30 +156,94 @@ function App() {
           ) : notFound ? (
             <div className="not-found text-center text-gray-600">
               <div className="not-found-emoji flex justify-center">
-                <svg viewBox="0 0 120 120" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+                <svg
+                  viewBox="0 0 120 120"
+                  width="120"
+                  height="120"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   {/* Shadow */}
-                  <ellipse cx="60" cy="114" rx="28" ry="5" fill="#000" opacity="0.2"/>
+                  <ellipse
+                    cx="60"
+                    cy="114"
+                    rx="28"
+                    ry="5"
+                    fill="#000"
+                    opacity="0.2"
+                  />
                   {/* Cracked Pokéball outer ring */}
-                  <circle cx="60" cy="60" r="52" fill="#1e293b" stroke="#334155" strokeWidth="3"/>
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    fill="#1e293b"
+                    stroke="#334155"
+                    strokeWidth="3"
+                  />
                   {/* Top half — faded red */}
-                  <path d="M 10 60 A 50 50 0 0 1 110 60 Z" fill="#7f1d1d" opacity="0.85"/>
+                  <path
+                    d="M 10 60 A 50 50 0 0 1 110 60 Z"
+                    fill="#7f1d1d"
+                    opacity="0.85"
+                  />
                   {/* Bottom half — dark slate */}
-                  <path d="M 10 60 A 50 50 0 0 0 110 60 Z" fill="#0f172a"/>
+                  <path d="M 10 60 A 50 50 0 0 0 110 60 Z" fill="#0f172a" />
                   {/* Middle band */}
-                  <line x1="10" y1="60" x2="110" y2="60" stroke="#334155" strokeWidth="5"/>
+                  <line
+                    x1="10"
+                    y1="60"
+                    x2="110"
+                    y2="60"
+                    stroke="#334155"
+                    strokeWidth="5"
+                  />
                   {/* Center button ring */}
-                  <circle cx="60" cy="60" r="13" fill="#0f172a" stroke="#475569" strokeWidth="4"/>
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="13"
+                    fill="#0f172a"
+                    stroke="#475569"
+                    strokeWidth="4"
+                  />
                   {/* Center button inner */}
-                  <circle cx="60" cy="60" r="6" fill="#1e293b"/>
+                  <circle cx="60" cy="60" r="6" fill="#1e293b" />
                   {/* Crack lines — red glow feel */}
-                  <path d="M 57 18 L 52 38 L 61 44 L 55 60" stroke="#f87171" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity="0.6"/>
-                  <path d="M 76 22 L 71 40 L 79 46" stroke="#f87171" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.4"/>
-                  <path d="M 40 72 L 46 85 L 38 92" stroke="#f87171" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.3"/>
+                  <path
+                    d="M 57 18 L 52 38 L 61 44 L 55 60"
+                    stroke="#f87171"
+                    strokeWidth="1.8"
+                    fill="none"
+                    strokeLinecap="round"
+                    opacity="0.6"
+                  />
+                  <path
+                    d="M 76 22 L 71 40 L 79 46"
+                    stroke="#f87171"
+                    strokeWidth="1.2"
+                    fill="none"
+                    strokeLinecap="round"
+                    opacity="0.4"
+                  />
+                  <path
+                    d="M 40 72 L 46 85 L 38 92"
+                    stroke="#f87171"
+                    strokeWidth="1"
+                    fill="none"
+                    strokeLinecap="round"
+                    opacity="0.3"
+                  />
                   {/* Sad eyes */}
-                  <circle cx="54.5" cy="59" r="2" fill="#64748b"/>
-                  <circle cx="65.5" cy="59" r="2" fill="#64748b"/>
+                  <circle cx="54.5" cy="59" r="2" fill="#64748b" />
+                  <circle cx="65.5" cy="59" r="2" fill="#64748b" />
                   {/* Sad mouth */}
-                  <path d="M 53 65 Q 60 61.5 67 65" stroke="#64748b" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+                  <path
+                    d="M 53 65 Q 60 61.5 67 65"
+                    stroke="#64748b"
+                    strokeWidth="1.8"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </div>
               <p className="not-found-text tracking-widest uppercase mt-4">
@@ -297,9 +361,15 @@ function App() {
 
             .eyebrow  { font-size: 0.6rem; letter-spacing: 0.2em; margin-bottom: 0.5rem; }
 
-            /* Title fluid between 320–640px:
-               at 320px → 57.6px, at 640px → 64px (capped) */
-            .page-title { font-size: clamp(3rem, 18vw, 4rem); margin-bottom: 0.75rem; }
+            /* Smoothed out the vw scaling for Mobile M and L. 
+              At 375px, font is ~45px. At 425px, font is ~51px. 
+              Added nowrap to explicitly prevent line breaks.
+            */
+            .page-title { 
+              font-size: clamp(2.5rem, 12vw, 4rem); 
+              margin-bottom: 0.75rem; 
+              white-space: nowrap;
+            }
 
             .subtitle     { font-size: 0.7rem; max-width: 16rem; }
             .result-count { font-size: 0.65rem; margin-bottom: 1rem; }
@@ -311,13 +381,19 @@ function App() {
           }
 
           /* ═════════════════════════════════════════
-             VERY SMALL  ≤ 360px  (Galaxy S8, etc.)
+            VERY SMALL  ≤ 360px  (Galaxy S8, iPhone SE, etc.)
           ═════════════════════════════════════════ */
           @media (max-width: 360px) {
-            .page-content { padding: 1.75rem 0.75rem; }
-            /* 0.75rem padding each side → content = 360 - 24 = 336px */
-            /* clamp floor 2.75rem = 44px — "Pokédex" ~7 chars × 44×0.58 = 178px ✓ */
-            .page-title   { font-size: clamp(2.75rem, 20vw, 3.5rem); }
+            .page-content { padding: 1.5rem 0.5rem; }
+            
+            /* Lowered the clamp slightly to accommodate the wide 'Syne' font */
+            .page-title { 
+              font-size: clamp(2rem, 12vw, 2.5rem); 
+              white-space: nowrap; 
+            }
+            
+            .eyebrow      { font-size: 0.55rem; letter-spacing: 0.15em; }
+            .subtitle     { font-size: 0.65rem; max-width: 14rem; }
           }
         `}</style>
       </div>

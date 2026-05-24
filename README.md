@@ -1,16 +1,65 @@
-# React + Vite
+# 🔴 Pokédex - Gotta Catch 'Em All
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A sleek, fully responsive Pokédex application built with React. Search through the original 151 Pokémon by name or ID, view their stats, and explore their types in a beautifully styled, animated UI.
 
-Currently, two official plugins are available:
+**🌟 Live Demo:** [View on Vercel](https://pokemon-react-app-eight-sigma.vercel.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Real-time Search:** Instantly filter Pokémon by their name or Pokédex ID.
+* **Debounced Inputs:** Search is optimized with debouncing to prevent excessive rendering and ensure smooth performance.
+* **Rich UI & Animations:** Features ambient background blobs, hover scaling, CSS gradient type badges, and custom staggered entrance animations for the grid.
+* **Fully Responsive:** Carefully calculated layout scaling ensuring it looks great on desktop, tablets, and even the smallest mobile screens (down to 320px).
+* **Detailed Stats:** View official artwork, height, weight, abilities, and dynamic stat bars for HP, Attack, Defense, and Speed.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠️ Tech Stack
+
+* **Frontend:** React (Vite)
+* **Styling:** Custom CSS with CSS Variables & Clamp functions for fluid typography
+* **Fonts:** Syne (Headings) & DM Mono (UI text)
+* **Data Source:** [PokéAPI](https://pokeapi.co/)
+
+---
+
+## 🚀 Running Locally
+
+To run this project on your local machine, follow these steps:
+
+1. **Clone the repository**
+   ```bash
+   git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
+   cd your-repo-name
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**
+   Navigate to `http://localhost:5173` (or the port provided in your terminal).
+
+---
+
+## 📂 Project Structure
+
+* `App.jsx` - Main application logic, state management, and layout wrapper.
+* `components/SearchBar.jsx` - Debounced search input UI.
+* `components/PokemonGrid.jsx` - Staggered grid layout for search results.
+* `components/PokemonCard.jsx` - Individual animated card displaying Pokémon data and stats.
+* `components/Loader.jsx` - Custom spinning Pokéball loading state.
+* `services/pokemonApi.js` - Data fetching logic from PokéAPI.
+* `utils/typeColors.js` - Color mappings for Pokémon types.
+
+---
+
+*Data provided by PokéAPI. Built with React.*
