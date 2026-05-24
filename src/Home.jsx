@@ -1,45 +1,88 @@
-import { useState, useEffect, useRef } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import PokemonGrid from "./components/PokemonGrid";
 import SearchBar from "./components/SearchBar";
 import Loader from "./components/Loader";
-import { fetchPokemonPage } from "./services/pokemonApi";
+import { fetchMasterRoster, fetchTypeRoster, fetchPokemonBatch } from "./services/pokemonApi";
 import { typeSolid } from "./utils/typeColors";
 
 function Home() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedType, setSelectedType] = useState("");
-  const observerTarget = useRef(null); // The invisible tripwire
+  const observerTarget = useRef(null);
 
-  // React Query's Infinite Scroll magic
+  // ── Debounce the search ──
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim().toLowerCase());
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // ── 1. Fetch Lightweight Rosters ──
+  const { data: masterRoster, isLoading: isLoadingMaster } = useQuery({
+    queryKey: ["masterRoster"],
+    queryFn: fetchMasterRoster,
+  });
+
+  const { data: typeRoster, isLoading: isLoadingType } = useQuery({
+    queryKey: ["typeRoster", selectedType],
+    queryFn: () => fetchTypeRoster(selectedType),
+    enabled: !!selectedType, // Only fetch if a type is clicked
+  });
+
+  // ── 2. Instantly Filter the Roster ──
+  const activeRoster = useMemo(() => {
+    let list = masterRoster || [];
+
+    // Filter by Type
+    if (selectedType && typeRoster) {
+      const typeNames = new Set(typeRoster.map((p) => p.name));
+      list = list.filter((p) => typeNames.has(p.name));
+    }
+
+    // Filter by Partial Name or Exact ID
+    if (debouncedSearch) {
+      list = list.filter((p) => {
+        // Extract the ID from the end of the URL (e.g. "https://pokeapi.co/api/v2/pokemon/6/")
+        const id = p.url.split("/").filter(Boolean).pop();
+        return p.name.includes(debouncedSearch) || id === debouncedSearch;
+      });
+    }
+
+    return list;
+  }, [masterRoster, typeRoster, selectedType, debouncedSearch]);
+
+  // ── 3. Infinite Scroll the Heavy Details ──
   const {
-    data,
-    isLoading,
+    data: infiniteData,
+    isLoading: isLoadingDetails,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
   } = useInfiniteQuery({
-    queryKey: ["pokemonList"],
-    queryFn: fetchPokemonPage,
+    queryKey: ["pokemonDetails", activeRoster], // Refetches whenever the active roster changes!
+    queryFn: async ({ pageParam = 0 }) => {
+      // Grab exactly 20 Pokémon from our filtered roster
+      const batch = activeRoster.slice(pageParam, pageParam + 20);
+      const details = await fetchPokemonBatch(batch);
+      
+      return { 
+        results: details, 
+        nextOffset: pageParam + 20 < activeRoster.length ? pageParam + 20 : undefined 
+      };
+    },
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextOffset,
+    enabled: activeRoster.length > 0, // Only run if we have Pokémon to load
   });
 
-  // Flatten the array of pages into a single continuous list of Pokémon
-  const allPokemon = data ? data.pages.flatMap(page => page.results) : [];
-
-  // Filter based on what is currently loaded
-  const filteredPokemon = allPokemon.filter((poke) => {
-    const matchesSearch = poke.name.toLowerCase().includes(search.trim().toLowerCase()) || 
-                          String(poke.id).includes(search.trim());
-    const matchesType = selectedType ? poke.types.some(t => t.type.name === selectedType) : true;
-    
-    return matchesSearch && matchesType;
-  });
-
+  // Flatten the loaded pages for the grid
+  const displayPokemon = infiniteData ? infiniteData.pages.flatMap(page => page.results) : [];
   const availableTypes = Object.keys(typeSolid);
 
-  // The Intersection Observer (Triggers fetchNextPage when you scroll to the bottom)
+  // ── Intersection Observer ──
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -54,9 +97,13 @@ function Home() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // Determine overall loading state
+  const isGlobalLoading = isLoadingMaster || (selectedType && isLoadingType) || (isLoadingDetails && displayPokemon.length === 0);
+
   return (
     <div className="page-content relative z-10 max-w-6xl mx-auto">
       <header className="header-section text-center">
+        {/* ... (Your existing Pokéball header UI) ... */}
         <div className="pokeball-wrap flex justify-center">
           <div className="pokeball-icon relative">
             <div className="absolute top-0 left-0 w-full h-1/2 bg-red-500 rounded-t-full border-[3px] border-gray-800" />
@@ -87,7 +134,7 @@ function Home() {
         </h1>
 
         <p className="subtitle text-gray-500 mx-auto">
-          Search by name or ID — results update as you type
+          Search by name or ID — explore over 1,000 Pokémon!
         </p>
       </header>
 
@@ -95,32 +142,39 @@ function Home() {
         <SearchBar value={search} onChange={setSearch} />
       </div>
 
-      {!isLoading && allPokemon.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-2 mb-8 max-w-3xl mx-auto px-4">
-          {availableTypes.map((type) => (
-            <button
-              key={type}
-              onClick={() => setSelectedType(selectedType === type ? "" : type)}
-              className={`px-3 py-1 rounded-full text-xs font-bold capitalize transition-all duration-300 ${
-                selectedType === type ? 'scale-110 shadow-lg text-white' : 'text-white/60 hover:text-white hover:scale-105'
-              }`}
-              style={{
-                background: selectedType === type || !selectedType ? typeSolid[type] : '#1f2937',
-                fontFamily: "'DM Mono', monospace",
-                letterSpacing: "0.08em",
-              }}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-wrap justify-center gap-2 mb-8 max-w-3xl mx-auto px-4">
+        {availableTypes.map((type) => (
+          <button
+            key={type}
+            onClick={() => setSelectedType(selectedType === type ? "" : type)}
+            className={`px-3 py-1 rounded-full text-xs font-bold capitalize transition-all duration-300 ${
+              selectedType === type ? 'scale-110 shadow-lg text-white' : 'text-white/60 hover:text-white hover:scale-105'
+            }`}
+            style={{
+              background: selectedType === type || !selectedType ? typeSolid[type] : '#1f2937',
+              fontFamily: "'DM Mono', monospace",
+              letterSpacing: "0.08em",
+            }}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+
+      {!isGlobalLoading && (
+        <p className="result-count text-gray-600 tracking-widest uppercase text-center mb-8" style={{ fontFamily: "'DM Mono', monospace" }}>
+          {debouncedSearch || selectedType
+            ? `Found ${activeRoster.length} results`
+            : `Showing all ${activeRoster.length} Pokémon`}
+        </p>
       )}
 
-      {isLoading && !allPokemon.length ? (
+      {isGlobalLoading ? (
         <Loader />
-      ) : filteredPokemon.length === 0 ? (
+      ) : activeRoster.length === 0 ? (
         <div className="not-found text-center text-gray-600">
            <div className="not-found-emoji flex justify-center">
+            {/* ... (Your existing Not Found SVG) ... */}
             <svg viewBox="0 0 120 120" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
               <ellipse cx="60" cy="114" rx="28" ry="5" fill="#000" opacity="0.2"/>
               <circle cx="60" cy="60" r="52" fill="#1e293b" stroke="#334155" strokeWidth="3"/>
@@ -138,14 +192,14 @@ function Home() {
             </svg>
           </div>
           <p className="not-found-text tracking-widest uppercase mt-4">
-            No Pokémon found matching your filters
+            No Pokémon match your filters
           </p>
         </div>
       ) : (
         <>
-          <PokemonGrid pokemon={filteredPokemon} />
+          <PokemonGrid pokemon={displayPokemon} />
           
-          {/* This empty div is the invisible tripwire at the bottom of the grid */}
+          {/* Invisible tripwire for Infinite Scroll */}
           <div ref={observerTarget} className="h-20 w-full flex items-center justify-center mt-8">
             {isFetchingNextPage && (
                <div className="flex gap-2 items-center text-gray-500 uppercase tracking-widest text-xs" style={{ fontFamily: "'DM Mono', monospace" }}>

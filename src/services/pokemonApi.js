@@ -1,26 +1,32 @@
 const BASE_URL = "https://pokeapi.co/api/v2";
 
-// NEW: Paginated fetch function that React Query will use
-export const fetchPokemonPage = async ({ pageParam = 0 }) => {
-  const limit = 20; // Load 20 at a time
-  const res = await fetch(`${BASE_URL}/pokemon?limit=${limit}&offset=${pageParam}`);
+// 1. Fetches a lightweight text list of ALL Pokémon names and URLs
+export const fetchMasterRoster = async () => {
+  const res = await fetch(`${BASE_URL}/pokemon?limit=10000`);
   const data = await res.json();
+  return data.results;
+};
 
+// 2. Fetches a lightweight text list of Pokémon belonging to a specific type
+export const fetchTypeRoster = async (type) => {
+  if (!type) return null;
+  const res = await fetch(`${BASE_URL}/type/${type}`);
+  const data = await res.json();
+  return data.pokemon.map((p) => p.pokemon);
+};
+
+// 3. Fetches the heavy details (images, stats) for a specific slice of 20 Pokémon
+export const fetchPokemonBatch = async (pokemonArray) => {
   const detailedPokemon = await Promise.all(
-    data.results.map(async (pokemon) => {
+    pokemonArray.map(async (pokemon) => {
       const response = await fetch(pokemon.url);
       return response.json();
     })
   );
-
-  // Return the data PLUS the math for the next page
-  return {
-    results: detailedPokemon,
-    nextOffset: data.next ? pageParam + limit : undefined,
-  };
+  return detailedPokemon;
 };
 
-// Existing search function remains unchanged
+// 4. Fetches a single Pokémon's full details (Used by the PokemonDetails page)
 export const searchPokemon = async (name) => {
   try {
     const res = await fetch(`${BASE_URL}/pokemon/${name.toLowerCase()}`);
