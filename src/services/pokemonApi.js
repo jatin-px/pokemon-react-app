@@ -28,11 +28,7 @@ export const fetchPokemonBatch = async (pokemonArray) => {
 
 // 4. Fetches a single Pokémon's full details (Used by the PokemonDetails page)
 export const searchPokemon = async (name) => {
-  try {
-    const res = await fetch(`${BASE_URL}/pokemon/${name.toLowerCase()}`);
-    if (!res.ok) throw new Error("Pokemon not found");
-    return await res.json();
-  } catch (error) {
-    throw error;
-  }
+  const res = await fetch(`${BASE_URL}/pokemon/${name.toLowerCase()}`);
+  if (!res.ok) throw new Error("Pokemon not found");
+  return await res.json();
 };
