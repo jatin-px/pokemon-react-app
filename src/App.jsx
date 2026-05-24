@@ -1,244 +1,80 @@
-import { useEffect, useState, useRef } from "react";
-import PokemonCard from "./components/PokemonCard";
-import PokemonGrid from "./components/PokemonGrid";
-import SearchBar from "./components/SearchBar";
-import Loader from "./components/Loader";
-import { fetchPokemonList } from "./services/pokemonApi";
-import { typeSolid } from "./utils/typeColors"; // NEW: Importing the colors for the buttons
+import { Routes, Route } from "react-router-dom";
+import Home from "./Home";
+import PokemonDetails from "./components/PokemonDetails";
 
 function App() {
-  const [pokemon, setPokemon] = useState([]);
-  const [search, setSearch] = useState("");
-  const [selectedType, setSelectedType] = useState(""); // NEW: State to track which type is clicked
-  const [loading, setLoading] = useState(false);
-  const [notFound, setNotFound] = useState(false);
-  const debounceRef = useRef(null);
-  const defaultListRef = useRef([]);
-
-  const loadPokemon = async () => {
-    setLoading(true);
-    setNotFound(false);
-    try {
-      const data = await fetchPokemonList(151);
-      defaultListRef.current = data;
-      setPokemon(data);
-    } catch (err) {
-      console.error(err);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    loadPokemon();
-    return () => clearTimeout(debounceRef.current);
-  }, []);
-
-  // NEW: Updated runSearch to handle both text and type filters
-  const runSearch = async (query, type) => {
-    const q = query.trim().toLowerCase();
-    let filtered = defaultListRef.current;
-
-    if (type) {
-      filtered = filtered.filter(poke => 
-        poke.types.some(t => t.type.name === type)
-      );
-    }
-
-    if (q) {
-      filtered = filtered.filter(
-        (poke) =>
-          poke.name.toLowerCase().includes(q) || String(poke.id).includes(q)
-      );
-    }
-
-    setPokemon(filtered);
-    setNotFound(filtered.length === 0);
-  };
-
-  const handleChange = (val) => {
-    setSearch(val);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => runSearch(val, selectedType), 500);
-  };
-
-  // NEW: Function when a user clicks a type button
-  const handleTypeClick = (type) => {
-    const newType = selectedType === type ? "" : type;
-    setSelectedType(newType);
-    runSearch(search, newType);
-  };
-
-  const availableTypes = Object.keys(typeSolid);
-
   return (
-    <>
-      <div className="app-root min-h-screen text-white">
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-          <div className="blob blob-red" />
-          <div className="blob blob-blue" />
-          <div className="blob blob-yellow" />
-        </div>
-        <div className="dot-grid fixed inset-0 pointer-events-none z-0" aria-hidden="true" />
-
-        <div className="page-content relative z-10 max-w-6xl mx-auto">
-          <header className="header-section text-center">
-            <div className="pokeball-wrap flex justify-center">
-              <div className="pokeball-icon relative">
-                <div className="absolute top-0 left-0 w-full h-1/2 bg-red-500 rounded-t-full border-[3px] border-gray-800" />
-                <div className="absolute bottom-0 left-0 w-full h-1/2 bg-white rounded-b-full border-[3px] border-gray-800" />
-                <div className="absolute top-1/2 left-0 w-full h-[3px] bg-gray-800 -translate-y-1/2" />
-                <div className="pokeball-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border-[3px] border-gray-800 rounded-full z-10" />
-              </div>
-            </div>
-
-            <p className="eyebrow font-bold uppercase text-yellow-400" style={{ fontFamily: "'DM Mono', monospace" }}>
-              Gotta Catch &apos;Em All
-            </p>
-
-            <h1
-              className="page-title font-black"
-              style={{
-                fontFamily: "'Syne', sans-serif",
-                background: "linear-gradient(135deg, #ffffff 30%, #facc15 70%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                paddingBottom: "0.08em",
-                display: "block",
-                lineHeight: 1,
-              }}
-            >
-              Pokédex
-            </h1>
-
-            <p className="subtitle text-gray-500 mx-auto">
-              Search by name or ID — results update as you type
-            </p>
-          </header>
-
-          {/* Search Bar */}
-          <div className="search-wrap max-w-2xl mx-auto mb-6">
-            <SearchBar value={search} onChange={handleChange} />
-          </div>
-
-          {/* NEW: Type Filter Buttons */}
-          {!loading && defaultListRef.current.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2 mb-8 max-w-3xl mx-auto px-4">
-              {availableTypes.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => handleTypeClick(type)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold capitalize transition-all duration-300 ${
-                    selectedType === type ? 'scale-110 shadow-lg text-white' : 'text-white/60 hover:text-white hover:scale-105'
-                  }`}
-                  style={{
-                    background: selectedType === type || !selectedType ? typeSolid[type] : '#1f2937',
-                    fontFamily: "'DM Mono', monospace",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {!loading && pokemon.length > 0 && (
-            <p className="result-count text-gray-600 tracking-widest uppercase text-center" style={{ fontFamily: "'DM Mono', monospace" }}>
-              {search.trim() || selectedType
-                ? `Showing ${pokemon.length} results`
-                : `Showing ${pokemon.length} Pokémon`}
-            </p>
-          )}
-
-          {loading ? (
-            <Loader />
-          ) : notFound ? (
-            <div className="not-found text-center text-gray-600">
-              <div className="not-found-emoji flex justify-center">
-                <svg viewBox="0 0 120 120" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
-                  <ellipse cx="60" cy="114" rx="28" ry="5" fill="#000" opacity="0.2"/>
-                  <circle cx="60" cy="60" r="52" fill="#1e293b" stroke="#334155" strokeWidth="3"/>
-                  <path d="M 10 60 A 50 50 0 0 1 110 60 Z" fill="#7f1d1d" opacity="0.85"/>
-                  <path d="M 10 60 A 50 50 0 0 0 110 60 Z" fill="#0f172a"/>
-                  <line x1="10" y1="60" x2="110" y2="60" stroke="#334155" strokeWidth="5"/>
-                  <circle cx="60" cy="60" r="13" fill="#0f172a" stroke="#475569" strokeWidth="4"/>
-                  <circle cx="60" cy="60" r="6" fill="#1e293b"/>
-                  <path d="M 57 18 L 52 38 L 61 44 L 55 60" stroke="#f87171" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity="0.6"/>
-                  <path d="M 76 22 L 71 40 L 79 46" stroke="#f87171" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.4"/>
-                  <path d="M 40 72 L 46 85 L 38 92" stroke="#f87171" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.3"/>
-                  <circle cx="54.5" cy="59" r="2" fill="#64748b"/>
-                  <circle cx="65.5" cy="59" r="2" fill="#64748b"/>
-                  <path d="M 53 65 Q 60 61.5 67 65" stroke="#64748b" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <p className="not-found-text tracking-widest uppercase mt-4">
-                No Pokémon found
-              </p>
-            </div>
-          ) : (
-            <PokemonGrid pokemon={pokemon} />
-          )}
-
-          <footer className="footer text-center text-gray-700 tracking-widest uppercase">
-            Data from PokéAPI · Built with React
-          </footer>
-        </div>
-
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Mono:wght@400;500&display=swap');
-          *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-          html, body { overflow-x: hidden; margin: 0; padding: 0; }
-          .app-root { background: #080d1a; font-family: 'DM Mono', monospace; }
-          .dot-grid { opacity: 0.12; background-image: radial-gradient(circle, #334155 1px, transparent 1px); background-size: 24px 24px; }
-          .blob { position: absolute; border-radius: 9999px; filter: blur(90px); opacity: 0.07; }
-          .blob-red    { width:600px; height:600px; background:#ef4444; top:-150px; left:-150px; }
-          .blob-blue   { width:500px; height:500px; background:#3b82f6; bottom:-100px; right:-100px; }
-          .blob-yellow { width:400px; height:400px; background:#facc15; top:40%; left:50%; transform:translate(-50%,-50%); opacity:0.05; }
-          .page-content { padding: 3rem 1.5rem; }
-          .header-section   { margin-bottom: 4rem; }
-          .pokeball-wrap     { margin-bottom: 1.5rem; }
-          .pokeball-icon     { width: 3.5rem; height: 3.5rem; }
-          .pokeball-center   { width: 1rem; height: 1rem; }
-          .eyebrow           { font-size: 0.75rem; letter-spacing: 0.4em; margin-bottom: 0.75rem; }
-          .page-title        { font-size: 5rem; margin-bottom: 1rem; }
-          .subtitle          { font-size: 0.875rem; max-width: 24rem; }
-          .result-count { font-size: 0.75rem; margin-bottom: 1.5rem; }
-          .not-found           { padding: 6rem 0; }
-          .not-found-emoji     { font-size: 3rem; margin-bottom: 1rem; }
-          .not-found-text      { font-size: 0.875rem; }
-          .footer { margin-top: 5rem; font-size: 0.75rem; padding-bottom: 2rem; }
-          @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-          
-          @media (max-width: 768px) {
-            .page-content   { padding: 2.5rem 1.25rem; }
-            .header-section { margin-bottom: 2.5rem; }
-            .page-title     { font-size: 4rem; }
-          }
-          @media (max-width: 640px) {
-            .page-content   { padding: 2rem 1rem; }
-            .header-section { margin-bottom: 2rem; }
-            .pokeball-wrap   { margin-bottom: 0.875rem; }
-            .pokeball-icon   { width: 2.5rem; height: 2.5rem; }
-            .pokeball-center { width: 0.65rem; height: 0.65rem; }
-            .eyebrow  { font-size: 0.6rem; letter-spacing: 0.2em; margin-bottom: 0.5rem; }
-            .page-title { font-size: clamp(2.5rem, 12vw, 4rem); margin-bottom: 0.75rem; white-space: nowrap; }
-            .subtitle     { font-size: 0.7rem; max-width: 16rem; }
-            .result-count { font-size: 0.65rem; margin-bottom: 1rem; }
-            .footer       { margin-top: 3rem; font-size: 0.65rem; }
-            .not-found       { padding: 4rem 0; }
-            .not-found-emoji { font-size: 2.5rem; }
-            .not-found-text  { font-size: 0.75rem; }
-          }
-          @media (max-width: 360px) {
-            .page-content { padding: 1.5rem 0.5rem; }
-            .page-title { font-size: clamp(2rem, 12vw, 2.5rem); white-space: nowrap; }
-            .eyebrow      { font-size: 0.55rem; letter-spacing: 0.15em; }
-            .subtitle     { font-size: 0.65rem; max-width: 14rem; }
-          }
-        `}</style>
+    <div className="app-root min-h-screen text-white relative">
+      {/* ── Shared Ambient Background ── */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+        <div className="blob blob-red" />
+        <div className="blob blob-blue" />
+        <div className="blob blob-yellow" />
       </div>
-    </>
+      <div className="dot-grid fixed inset-0 pointer-events-none z-0" aria-hidden="true" />
+
+      {/* ── Routes ── */}
+      <div className="relative z-10">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/pokemon/:name" element={<PokemonDetails />} />
+        </Routes>
+      </div>
+
+      {/* ── Global Styles ── */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Mono:wght@400;500&display=swap');
+        *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { overflow-x: hidden; margin: 0; padding: 0; }
+        .app-root { background: #080d1a; font-family: 'DM Mono', monospace; }
+        .dot-grid { opacity: 0.12; background-image: radial-gradient(circle, #334155 1px, transparent 1px); background-size: 24px 24px; }
+        .blob { position: absolute; border-radius: 9999px; filter: blur(90px); opacity: 0.07; }
+        .blob-red    { width:600px; height:600px; background:#ef4444; top:-150px; left:-150px; }
+        .blob-blue   { width:500px; height:500px; background:#3b82f6; bottom:-100px; right:-100px; }
+        .blob-yellow { width:400px; height:400px; background:#facc15; top:40%; left:50%; transform:translate(-50%,-50%); opacity:0.05; }
+        .page-content { padding: 3rem 1.5rem; }
+        .header-section { margin-bottom: 4rem; }
+        .pokeball-wrap { margin-bottom: 1.5rem; }
+        .pokeball-icon { width: 3.5rem; height: 3.5rem; }
+        .pokeball-center { width: 1rem; height: 1rem; }
+        .eyebrow { font-size: 0.75rem; letter-spacing: 0.4em; margin-bottom: 0.75rem; }
+        .page-title { font-size: 5rem; margin-bottom: 1rem; }
+        .subtitle { font-size: 0.875rem; max-width: 24rem; }
+        .result-count { font-size: 0.75rem; margin-bottom: 1.5rem; }
+        .not-found { padding: 6rem 0; }
+        .not-found-emoji { font-size: 3rem; margin-bottom: 1rem; }
+        .not-found-text { font-size: 0.875rem; }
+        .footer { margin-top: 5rem; font-size: 0.75rem; padding-bottom: 2rem; }
+        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media (max-width: 768px) {
+          .page-content { padding: 2.5rem 1.25rem; }
+          .header-section { margin-bottom: 2.5rem; }
+          .page-title { font-size: 4rem; }
+        }
+        @media (max-width: 640px) {
+          .page-content { padding: 2rem 1rem; }
+          .header-section { margin-bottom: 2rem; }
+          .pokeball-wrap { margin-bottom: 0.875rem; }
+          .pokeball-icon { width: 2.5rem; height: 2.5rem; }
+          .pokeball-center { width: 0.65rem; height: 0.65rem; }
+          .eyebrow { font-size: 0.6rem; letter-spacing: 0.2em; margin-bottom: 0.5rem; }
+          .page-title { font-size: clamp(2.5rem, 12vw, 4rem); margin-bottom: 0.75rem; white-space: nowrap; }
+          .subtitle { font-size: 0.7rem; max-width: 16rem; }
+          .result-count { font-size: 0.65rem; margin-bottom: 1rem; }
+          .footer { margin-top: 3rem; font-size: 0.65rem; }
+          .not-found { padding: 4rem 0; }
+          .not-found-emoji { font-size: 2.5rem; }
+          .not-found-text { font-size: 0.75rem; }
+        }
+        @media (max-width: 360px) {
+          .page-content { padding: 1.5rem 0.5rem; }
+          .page-title { font-size: clamp(2rem, 12vw, 2.5rem); white-space: nowrap; }
+          .eyebrow { font-size: 0.55rem; letter-spacing: 0.15em; }
+          .subtitle { font-size: 0.65rem; max-width: 14rem; }
+        }
+      `}</style>
+    </div>
   );
 }
 

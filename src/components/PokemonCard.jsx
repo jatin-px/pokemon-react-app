@@ -1,4 +1,5 @@
 import { typeColors, typeSolid } from "../utils/typeColors";
+import { Link } from "react-router-dom";
 
 const PokemonCard = ({ pokemon }) => {
   const mainType = pokemon.types[0].type.name;
@@ -19,11 +20,12 @@ const PokemonCard = ({ pokemon }) => {
   };
 
   return (
-    <div
-      className="relative rounded-3xl overflow-hidden shadow-2xl
+    <Link
+      to={`/pokemon/${pokemon.name}`}
+      className="relative rounded-3xl overflow-hidden shadow-2xl block
         transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1
-        cursor-pointer group"
-      style={{ background: "linear-gradient(145deg, #1a1f35, #111827)" }}
+        group"
+      style={{ background: "linear-gradient(145deg, #1a1f35, #111827)", textDecoration: "none" }}
     >
       <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`} />
 
@@ -184,7 +186,7 @@ const PokemonCard = ({ pokemon }) => {
           })}
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
